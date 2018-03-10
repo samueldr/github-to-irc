@@ -1,85 +1,160 @@
 module GithubWebhook
+	# A couple helper functions.
+	module Helpers
+		# Converts a "author-like" object to a name to print.
+		# It currently favours the github username.
+		def to_author(author)
+			# When an account is given
+			return "@" + author["login"] if author["login"]
+
+			# Commits have a username key
+			if author["username"]
+				"@" + author["username"]
+			elsif author["name"]
+				author["name"]
+			else
+				# When no known key can be used?
+				# FIXME : log this?
+				"(?)"
+			end
+		end
+
+		# Returns an ellipsized string when the string is long.
+		def ellipsize(msg, length)
+			return msg unless msg.length > length
+			"#{msg[0...length]}…"
+		end
+
+		# Shortens a git id.
+		def git_id(id)
+			id[0...8]
+		end
+
+		# Could (in one fell swoop) shorten all URLs.
+		# TODO : https://blog.github.com/2011-11-10-git-io-github-url-shortener/
+		def git_io(url)
+			url
+		end
+	end
 
 	def self.handle(event, type:)
-		type = type.to_sym
-
-		pp type
-		return [] unless Handlers.respond_to?(type)
-
-		val = Handlers.send(type, event)
-		# Always return an array
-		val ||= []
-		val
+		type = type.split("_").map(&:capitalize).join().to_sym
+		return [] unless GithubWebhook.constants(false).include?(type)
+		klass = GithubWebhook.const_get(type)
+		instance = klass.new(event)
+		instance.to_messages
 	end
 
 	# Handlers for events.
-	module Handlers
-		# A couple helper functions.
-		module Helpers
-			# Converts a "author-like" object to a name to print.
-			# It currently favours the github username.
-			def self.authorize(author)
-				# When an account is given
-				return "@" + author["login"] if author["login"]
+	class Event
+		include Helpers
 
-				# Commits have a username key
-				if author["username"]
-					"@" + author["username"]
-				elsif author["name"]
-					author["name"]
-				else
-					# When no known key can be used?
-					# FIXME : log this?
-					"(?)"
-				end
-			end
-
-			# Returns an ellipsized string when the string is long.
-			def self.ellipsize(msg, length)
-				return msg unless msg.length > length
-				"#{msg[0...length]}…"
-			end
-
-			# Shortens a git id.
-			def self.git_id(id)
-				id[0...8]
-			end
-
-			# Could (in one fell swoop) shorten all URLs.
-			# TODO : https://blog.github.com/2011-11-10-git-io-github-url-shortener/
-			def self.url(url)
-				url
-			end
+		def initialize(event)
+			@event = event
 		end
 
-		def self.issues(event)
-			action = event["action"]
-			issue  = event["issue"]
-			repository = event["repository"]["name"]
+		# Defaults to an empty list.
+		def to_messages()
+			[]
+		end
+	end
 
-			number = issue["number"]
-			url    = Helpers.url(issue["html_url"])
-			title  = issue["title"]
+	class Push < Event
+		def sender
+			@event["sender"]
+		end
 
-			author = Helpers.authorize(issue["user"])
+		def author
+			to_author(@event["sender"])
+		end
 
+		def repository
+			@event["repository"]["name"]
+		end
+
+		def branch
+			@event["ref"].gsub(/^refs\/heads\//, "")
+		end
+
+		def url
+			git_io(@event["compare"])
+		end
+
+		def commits
+			@event["commits"]
+		end
+
+		def count
+			commits.length
+		end
+
+		def to_messages()
+			["[#{repository}] #{author} pushed #{count} commits to #{branch}`: #{url}"] +
+				commits[0...3].map do |commit|
+					commit_author = to_author(commit["author"])
+					id = git_id(commit["id"])
+					message = ellipsize(commit["message"], 120)
+					" → #{id} by #{commit_author}: #{message}"
+				end
+		end
+	end
+
+	class IssueLike < Event
+		def action
+			@event["action"]
+		end
+
+		def repository
+			@event["repository"]["name"]
+		end
+
+		def number
+			_self["number"]
+		end
+
+		def url
+			git_io(_self["html_url"])
+		end
+
+		def title
+			_self["title"]
+		end
+
+		def author
+			to_author(_self["user"])
+		end
+
+	end
+
+	class Issues < IssueLike
+		def _self
+			issue
+		end
+
+		def issue
+			@event["issue"]
+		end
+
+		def to_messages
 			case action
 			when "opened", "closed", "reopened"
 				["[#{repository}] #{author} #{action} issue ##{number} → #{title} → #{url}"]
+			else
+				[]
 			end
 		end
+	end
 
-		def self.pull_request(event)
-			action = event["action"]
-			repository = event["repository"]["name"]
-			pull_request  = event["pull_request"]
+	class PullRequest < IssueLike
+		def _self
+			pull_request
+		end
 
-			number = pull_request["number"]
-			url    = Helpers.url(pull_request["html_url"])
-			title  = pull_request["title"]
+		def pull_request
+			@event["pull_request"]
+		end
 
-			author = Helpers.authorize(pull_request["user"])
-
+		def to_messages
 			status =
 				case action
 				when "closed"
@@ -95,26 +170,9 @@ module GithubWebhook
 			case action
 			when "opened", "closed", "reopened"
 				["[#{repository}] #{author} #{status} pull request ##{number} → #{title} → #{url}"]
+			else
+				[]
 			end
-		end
-
-		def self.push(event)
-			sender = event["sender"]
-			author = Helpers.authorize(event["sender"])
-			repository = event["repository"]["name"]
-			branch = event["ref"].gsub(/^refs\/heads\//, "")
-			url = Helpers.url(event["compare"])
-
-			commits = event["commits"]
-			count = commits.length
-
-			["[#{repository}] #{author} pushed #{count} commits to #{branch}`: #{url}"] +
-				commits[0...3].map do |commit|
-					commit_author = Helpers.authorize(commit["author"])
-					id = Helpers.git_id(commit["id"])
-					message = Helpers.ellipsize(commit["message"], 120)
-					" → #{id} by #{commit_author}: #{message}"
-				end
 		end
 	end
 end
