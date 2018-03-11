@@ -1,9 +1,3 @@
-#!/usr/bin/env bash
+#!/usr/bin/env ruby
 
-set -e
-set -u
-
-this_dir="$(dirname "${BASH_SOURCE[0]}")"
-this_name="${BASH_SOURCE[0]##*/}"
-
-exec ruby "$this_dir/../lib/$this_name.rb" "$@"
+require_relative "../lib/github-to-irc.rb"
