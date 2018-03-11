@@ -1,13 +1,21 @@
 { pkgs ? import <nixpkgs> {} }:
 with pkgs;
+let env = bundlerEnv {
+  name = "nixos-webhooks-irc-env";
+
+  inherit ruby;
+  gemdir = ./.;
+};
+in
 stdenv.mkDerivation rec {
   name = "nixos-webhooks-irc";
+  src = ./.;
   buildInputs = [
-    bundler
+    env
   ];
 
-  #passthru = {
-  #  # Allows use of a tarball URL.
-  #  release = (import ./release.nix {inherit pkgs;});
-  #};
+  postInstall = ''
+    mkdir -p $out/lib
+    cp *.rb $out/lib/
+  '';
 }
