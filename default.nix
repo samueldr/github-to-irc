@@ -14,8 +14,9 @@ stdenv.mkDerivation rec {
     env
   ];
 
-  postInstall = ''
-    mkdir -p $out/lib
-    cp *.rb $out/lib/
+  installPhase = ''
+    mkdir -vp $out/
+    cp -vr lib $out/lib
+    cp -vpr bin $out/bin
   '';
 }

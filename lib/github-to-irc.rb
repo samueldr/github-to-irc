@@ -1,7 +1,7 @@
 require "bunny"
-require_relative "./webhook.rb"
-require "pp"
 require "json"
+require "date"
+require_relative "./webhook.rb"
 
 unless ARGV.count == 1
 	STDERR.puts("Needs config.json as argv1")
@@ -11,9 +11,14 @@ end
 # https://github.com/NixOS/ofborg/blob/03312b8176bfd197aeb693721b516c6a25a4611e/ircbot/src/config.rs#L17
 config = JSON.parse(File.read(ARGV.first))
 
+def log(msg)
+	puts "[#{DateTime.now.strftime("%F %H:%M:%S")}] <github-to-irc> #{msg}"
+end
+
 $webhook_exchange = "github-events"
 $irc_exchange = "exchange-messages"
 
+log "connecting..."
 conn = Bunny.new(
 	host:  config["rabbitmq"]["host"],
 	vhost: config["rabbitmq"]["vhost"],
@@ -24,6 +29,8 @@ conn = Bunny.new(
 )
 
 conn.start()
+log "connected!"
+
 ch = conn.create_channel()
 
 github_queue = ch.queue("@samueldr.github-events-to-irc:github")
@@ -33,6 +40,7 @@ github_queue.bind(ch.topic($webhook_exchange, durable: true), routing_key: "pull
 
 irc_exchange = ch.fanout($irc_exchange, durable: true)
 
+log "Waiting for events..."
 github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
 	type = delivery_info[:routing_key].split(".").first
 	data = JSON.parse(payload)
@@ -46,3 +54,4 @@ github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
 		}), routing_key: "queue-publish")
 	end
 end
+log "Bye!"
