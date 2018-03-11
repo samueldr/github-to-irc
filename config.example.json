@@ -1,8 +1,8 @@
 {
 	"rabbitmq": {
 		"vhost": "irc",
-		"user": "webhook",
-		"pass": "webhook",
+		"username": "webhook",
+		"password": "webhook",
 		"host": "127.0.0.1",
 		"ssl": false
 	}
