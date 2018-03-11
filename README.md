@@ -1,3 +1,16 @@
+## Development
+
+```
+$ nix-shell
+$ bin/github-to-irc config.json
+```
+
+## Using
+
+```
+$ nix-build
+$ result/bin/github-to-irc config.json
+```
 
 ## Updating gems
 
