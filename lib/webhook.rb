@@ -38,11 +38,15 @@ module GithubWebhook
 
 		# Translates github URLs into git.io URLs.
 		def git_io(url)
-			http = Net::HTTP.new(GIT_IO_ENDPOINT.host, GIT_IO_ENDPOINT.port)
-			http.use_ssl = true
-			params = {url: url}
-			response = http.post(GIT_IO_ENDPOINT, URI.encode_www_form(params))
-			response["Location"]
+			begin
+				http = Net::HTTP.new(GIT_IO_ENDPOINT.host, GIT_IO_ENDPOINT.port)
+				http.use_ssl = true
+				params = {url: url}
+				response = http.post(GIT_IO_ENDPOINT, URI.encode_www_form(params))
+				return response["Location"]
+			rescue
+				return url
+			end
 		end
 	end
 
