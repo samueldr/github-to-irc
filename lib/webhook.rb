@@ -1,3 +1,4 @@
+# Namespace for the webhook data to irc bit.
 module GithubWebhook
 	# A couple helper functions.
 	module Helpers
@@ -37,6 +38,8 @@ module GithubWebhook
 		end
 	end
 
+	# Given event data and type, uses the proper class and
+	# returns an array of messages.
 	def self.handle(event, type:)
 		type = type.split("_").map(&:capitalize).join().to_sym
 		return [] unless GithubWebhook.constants(false).include?(type)
@@ -45,7 +48,7 @@ module GithubWebhook
 		instance.to_messages
 	end
 
-	# Handlers for events.
+	# Generic Event.
 	class Event
 		include Helpers
 
@@ -59,6 +62,7 @@ module GithubWebhook
 		end
 	end
 
+	# Push event.
 	class Push < Event
 		def sender
 			@event["sender"]
@@ -89,6 +93,8 @@ module GithubWebhook
 		end
 
 		def to_messages()
+			# Starts with a description of the event.
+			# Then keeps at most the three first commits.
 			["[#{repository}] #{author} pushed #{count} commits to #{branch}`: #{url}"] +
 				commits[0...3].map do |commit|
 					commit_author = to_author(commit["author"])
@@ -99,6 +105,7 @@ module GithubWebhook
 		end
 	end
 
+	# Pull Requests and Issues looks alike.
 	class IssueLike < Event
 		def action
 			@event["action"]
@@ -126,6 +133,7 @@ module GithubWebhook
 
 	end
 
+	# Issues event.
 	class Issues < IssueLike
 		def _self
 			issue
@@ -145,6 +153,7 @@ module GithubWebhook
 		end
 	end
 
+	# Pull Request event.
 	class PullRequest < IssueLike
 		def _self
 			pull_request
