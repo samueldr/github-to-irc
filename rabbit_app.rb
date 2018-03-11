@@ -3,13 +3,26 @@ require_relative "./webhook.rb"
 require "pp"
 require "json"
 
-$vhost = "ofborg"
-$user = "webhook"
-$pass = "webhook"
+unless ARGV.count == 1
+	STDERR.puts("Needs config.json as argv1")
+	exit 1
+end
+
+# https://github.com/NixOS/ofborg/blob/03312b8176bfd197aeb693721b516c6a25a4611e/ircbot/src/config.rs#L17
+config = JSON.parse(File.read(ARGV.first))
+
 $webhook_exchange = "github-events"
 $irc_exchange = "exchange-messages"
 
-conn = Bunny.new(vhost: $vhost, user: $user, pass: $pass)
+conn = Bunny.new(
+	host:  config["rabbitmq"]["host"],
+	vhost: config["rabbitmq"]["vhost"],
+	user:  config["rabbitmq"]["user"],
+	pass:  config["rabbitmq"]["pass"],
+	tls:   config["rabbitmq"]["ssl"],
+	verify_peer: false,
+)
+
 conn.start()
 ch = conn.create_channel()
 
