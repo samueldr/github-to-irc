@@ -6,18 +6,30 @@ require "json"
 $vhost = "ofborg"
 $user = "webhook"
 $pass = "webhook"
-$exchange = "github-events"
+$webhook_exchange = "github-events"
+$irc_exchange = "exchange-messages"
 
 conn = Bunny.new(vhost: $vhost, user: $user, pass: $pass)
 conn.start()
 ch = conn.create_channel()
-q = ch.queue("github-events-to-irc")
-q.bind(ch.topic($exchange, durable: true), routing_key: "push.#")
-q.bind(ch.topic($exchange, durable: true), routing_key: "issues.#")
-q.bind(ch.topic($exchange, durable: true), routing_key: "pull_request.#")
 
-q.subscribe(block: true) do |delivery_info, metadata, payload|
+github_queue = ch.queue("@samueldr.github-events-to-irc:github")
+github_queue.bind(ch.topic($webhook_exchange, durable: true), routing_key: "push.#")
+github_queue.bind(ch.topic($webhook_exchange, durable: true), routing_key: "issues.#")
+github_queue.bind(ch.topic($webhook_exchange, durable: true), routing_key: "pull_request.#")
+
+irc_exchange = ch.fanout($irc_exchange, durable: true)
+
+github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
 	type = delivery_info[:routing_key].split(".").first
 	data = JSON.parse(payload)
 	reply = GithubWebhook.handle(data, type: type)
+
+	reply.each do |msg|
+		irc_exchange.publish(JSON.generate({
+			target: "#nixos",
+			body: msg,
+			message_type: "notice",
+		}), routing_key: "queue-publish")
+	end
 end
