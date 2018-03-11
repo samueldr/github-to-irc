@@ -35,7 +35,8 @@ log "connected!"
 channel = conn.create_channel()
 github_queue = channel.queue()
 github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "push.#")
-github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "issues.#")
+# Disabled in code as it's spammy AF.
+#github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "issues.#")
 github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "pull_request.#")
 irc_exchange = channel.fanout(IRC_EXCHANGE, durable: true, passive: true)
 
