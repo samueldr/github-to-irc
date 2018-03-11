@@ -36,7 +36,7 @@ github_queue = channel.queue()
 github_queue.bind(channel.topic($webhook_exchange, durable: true), routing_key: "push.#")
 github_queue.bind(channel.topic($webhook_exchange, durable: true), routing_key: "issues.#")
 github_queue.bind(channel.topic($webhook_exchange, durable: true), routing_key: "pull_request.#")
-irc_exchange = channel.fanout($irc_exchange, durable: true)
+irc_exchange = channel.fanout($irc_exchange, durable: true, passive: true)
 
 log "Waiting for events..."
 github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
