@@ -1,7 +1,12 @@
+require "net/http"
+require "uri"
+
 # Namespace for the webhook data to irc bit.
 module GithubWebhook
 	# A couple helper functions.
 	module Helpers
+		GIT_IO_ENDPOINT = URI("https://git.io/")
+
 		# Converts a "author-like" object to a name to print.
 		# It currently favours the github username.
 		def to_author(author)
@@ -31,10 +36,13 @@ module GithubWebhook
 			id[0...8]
 		end
 
-		# Could (in one fell swoop) shorten all URLs.
-		# TODO : https://blog.github.com/2011-11-10-git-io-github-url-shortener/
+		# Translates github URLs into git.io URLs.
 		def git_io(url)
-			url
+			http = Net::HTTP.new(GIT_IO_ENDPOINT.host, GIT_IO_ENDPOINT.port)
+			http.use_ssl = true
+			params = {url: url}
+			response = http.post(GIT_IO_ENDPOINT, URI.encode_www_form(params))
+			response["Location"]
 		end
 	end
 
