@@ -33,7 +33,7 @@ log "connected!"
 
 ch = conn.create_channel()
 
-github_queue = ch.queue("@samueldr.github-events-to-irc:github")
+github_queue = ch.queue()
 github_queue.bind(ch.topic($webhook_exchange, durable: true), routing_key: "push.#")
 github_queue.bind(ch.topic($webhook_exchange, durable: true), routing_key: "issues.#")
 github_queue.bind(ch.topic($webhook_exchange, durable: true), routing_key: "pull_request.#")
