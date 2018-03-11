@@ -15,8 +15,8 @@ def log(msg)
 	puts "[#{DateTime.now.strftime("%F %H:%M:%S")}] <github-to-irc> #{msg}"
 end
 
-$webhook_exchange = "github-events"
-$irc_exchange = "exchange-messages"
+WEBHOOK_EXCHANGE = "github-events"
+IRC_EXCHANGE = "exchange-messages"
 
 log "connecting..."
 conn = Bunny.new(
@@ -33,10 +33,10 @@ log "connected!"
 
 channel = conn.create_channel()
 github_queue = channel.queue()
-github_queue.bind(channel.topic($webhook_exchange, durable: true), routing_key: "push.#")
-github_queue.bind(channel.topic($webhook_exchange, durable: true), routing_key: "issues.#")
-github_queue.bind(channel.topic($webhook_exchange, durable: true), routing_key: "pull_request.#")
-irc_exchange = channel.fanout($irc_exchange, durable: true, passive: true)
+github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "push.#")
+github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "issues.#")
+github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "pull_request.#")
+irc_exchange = channel.fanout(IRC_EXCHANGE, durable: true, passive: true)
 
 log "Waiting for events..."
 github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
