@@ -12,6 +12,7 @@ stdenv.mkDerivation rec {
   src = ./.;
   buildInputs = [
     env
+    env.ruby
   ];
 
   installPhase = ''
