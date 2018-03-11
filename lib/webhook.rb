@@ -94,14 +94,28 @@ module GithubWebhook
 
 		def to_messages()
 			# Starts with a description of the event.
+			# Handles 1-commit long push events differently,
 			# Then keeps at most the three first commits.
-			["[#{repository}] #{author} pushed #{count} commits to #{branch}`: #{url}"] +
+			if commits.length == 1 then
+				commit = commits.first
+				commit_author = to_author(commit["author"])
+				message = ellipsize(commit["message"], 120)
+
+				# It's possible a push event is done by someone else than the author.
+				if commit_author == author then
+					["[#{repository}] #{author} pushed to #{branch} « #{message} »: #{url}"]
+				else
+					["[#{repository}] #{author} pushed commit from #{commit_author} to #{branch} « #{message} »: #{url}"]
+				end
+			else
+				["[#{repository}] #{author} pushed #{count} commits to #{branch}: #{url}"] +
 				commits[0...3].map do |commit|
 					commit_author = to_author(commit["author"])
 					id = git_id(commit["id"])
 					message = ellipsize(commit["message"], 120)
 					" → #{id} by #{commit_author}: #{message}"
 				end
+			end
 		end
 	end
 
