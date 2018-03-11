@@ -27,6 +27,7 @@ conn = Bunny.new(
 	tls:   config["rabbitmq"]["ssl"],
 	verify_peer: false,
 )
+channels = config["github-to-irc"]["channels"]
 
 conn.start()
 log "connected!"
@@ -40,16 +41,24 @@ irc_exchange = channel.fanout(IRC_EXCHANGE, durable: true, passive: true)
 
 log "Waiting for events..."
 github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
-	type = delivery_info[:routing_key].split(".").first
+	# Assuming the routing key to stay `event_type.owner/repo`.
+	type, repository = delivery_info[:routing_key].split(".")
 	data = JSON.parse(payload)
 	reply = GithubWebhook.handle(data, type: type)
 
+	# Find the repository's channels...
+	irc_channels = channels["per-repository"][repository] if channels["per-repository"]
+	# Or use the defaults.
+	irc_channels ||= channels["default"]
+
 	reply.each do |msg|
-		irc_exchange.publish(JSON.generate({
-			target: "#nixos",
-			body: msg,
-			message_type: "notice",
-		}), routing_key: "queue-publish")
+		irc_channels.each do |c|
+			irc_exchange.publish(JSON.generate({
+				target: c,
+				body: msg,
+				message_type: "notice",
+			}), routing_key: "queue-publish")
+		end
 	end
 end
 

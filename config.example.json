@@ -1,4 +1,16 @@
 {
+	"github-to-irc": {
+		"channels": {
+			"default": [
+				"#nixos"
+			],
+			"per-repository": {
+				"NixOS/ofborg": [
+					"#nixos-borg"
+				]
+			}
+		}
+	},
 	"rabbitmq": {
 		"vhost": "irc",
 		"username": "webhook",
