@@ -5,7 +5,7 @@
 				"#nixos"
 			],
 			"per-repository": {
-				"NixOS/ofborg": [
+				"nixos/ofborg": [
 					"#nixos-borg"
 				]
 			}

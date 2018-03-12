@@ -48,7 +48,7 @@ github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
 	reply = GithubWebhook.handle(data, type: type)
 
 	# Find the repository's channels...
-	irc_channels = channels["per-repository"][repository] if channels["per-repository"]
+	irc_channels = channels["per-repository"][repository.downcase] if channels["per-repository"]
 	# Or use the defaults.
 	irc_channels ||= channels["default"]
 
