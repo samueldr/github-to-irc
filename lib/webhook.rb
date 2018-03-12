@@ -156,7 +156,7 @@ module GithubWebhook
 		end
 
 		def title
-			_self["title"]
+			ellipsize(_self["title"], 120)
 		end
 
 		def author
