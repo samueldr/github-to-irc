@@ -115,7 +115,8 @@ module GithubWebhook
 			if commits.length == 1 then
 				commit = commits.first
 				commit_author = to_author(commit["author"])
-				message = ellipsize(commit["message"], 120)
+				message = commit["message"].split("\n").first.strip
+				message = ellipsize(message, 120)
 
 				# It's possible a push event is done by someone else than the author.
 				if commit_author == author then
@@ -128,7 +129,8 @@ module GithubWebhook
 				commits[0...3].map do |commit|
 					commit_author = to_author(commit["author"])
 					id = git_id(commit["id"])
-					message = ellipsize(commit["message"], 120)
+					message = commit["message"].split("\n").first.strip
+					message = ellipsize(message, 120)
 					" → #{id} by #{commit_author}: #{message}"
 				end
 			end
