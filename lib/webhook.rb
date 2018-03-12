@@ -80,10 +80,6 @@ module GithubWebhook
 
 	# Push event.
 	class Push < Event
-		def sender
-			@event["sender"]
-		end
-
 		def author
 			sender
 		end
