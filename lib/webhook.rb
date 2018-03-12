@@ -72,6 +72,10 @@ module GithubWebhook
 		def to_messages()
 			[]
 		end
+
+		def sender()
+			to_author(@event["sender"])
+		end
 	end
 
 	# Push event.
@@ -81,7 +85,7 @@ module GithubWebhook
 		end
 
 		def author
-			to_author(@event["sender"])
+			sender
 		end
 
 		def repository
@@ -156,7 +160,6 @@ module GithubWebhook
 		def author
 			to_author(_self["user"])
 		end
-
 	end
 
 	# Issues event.
@@ -172,7 +175,7 @@ module GithubWebhook
 		def to_messages
 			case action
 			when "opened", "closed", "reopened"
-				["[#{repository}] #{author} #{action} issue ##{number} → #{title} → #{url}"]
+				["[#{repository}] #{sender} #{action} issue ##{number} → #{title} → #{url}"]
 			else
 				[]
 			end
@@ -204,7 +207,7 @@ module GithubWebhook
 
 			case action
 			when "opened", "closed", "reopened"
-				["[#{repository}] #{author} #{status} pull request ##{number} → #{title} → #{url}"]
+				["[#{repository}] #{sender} #{status} pull request ##{number} → #{title} → #{url}"]
 			else
 				[]
 			end
