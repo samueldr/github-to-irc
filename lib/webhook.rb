@@ -121,14 +121,7 @@ module GithubWebhook
 					["[#{repository}] #{author} pushed commit from #{commit_author} to #{branch} « #{message} »: #{url}"]
 				end
 			else
-				["[#{repository}] #{author} pushed #{count} commits to #{branch}: #{url}"] +
-				commits[0...3].map do |commit|
-					commit_author = to_author(commit["author"])
-					id = git_id(commit["id"])
-					message = commit["message"].split("\n").first.strip
-					message = ellipsize(message, 120)
-					" → #{id} by #{commit_author}: #{message}"
-				end
+				["[#{repository}] #{author} pushed #{count} commits to #{branch}: #{url}"]
 			end
 		end
 	end
