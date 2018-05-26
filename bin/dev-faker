@@ -17,8 +17,9 @@ unless ARGV.count >= 2
 	exit 1
 end
 
-event = ARGV[1]
-$event = File.read(File.join(TESTS_FOLDER, "#{event}.event"))
+event_file = "#{ARGV[1]}.event"
+event = ARGV[1].split(".").first
+$event = File.read(File.join(TESTS_FOLDER, event_file))
 repo = JSON.parse($event)["repository"]["full_name"]
 
 #
