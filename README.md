@@ -2,6 +2,7 @@
 
 ```
 $ nix-shell
+$ bin/dev-setup
 $ bin/github-to-irc config.json
 ```
 

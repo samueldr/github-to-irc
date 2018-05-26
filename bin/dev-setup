@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+
+require_relative "../lib/libs"
+
+#
+# This assumes:
+#
+#  * Dependencies installed.
+#  * Ran into a nix-shell.
+#
+
+#
+# This will create the exchanges needed for the bot to connect to
+# in the configured rabbitmq instance.
+#
+
+connect()
+
+# FIXME : probably not the right way to configure this, but it works.
+channel = $conn.create_channel()
+
+log("Creating WEBHOOK_EXCHANGE #{WEBHOOK_EXCHANGE}")
+channel.topic(WEBHOOK_EXCHANGE, durable: true)
+
+log("Creating IRC_EXCHANGE #{IRC_EXCHANGE}")
+channel.fanout(IRC_EXCHANGE, durable: true, passive: false)
+
+log("Done...")
