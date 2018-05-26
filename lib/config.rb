@@ -1,6 +1,6 @@
 require "json"
 
-unless ARGV.count == 1
+unless ARGV.count >= 1
 	STDERR.puts("Needs config.json as argv1")
 	exit 1
 end

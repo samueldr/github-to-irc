@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+
+require_relative "../lib/libs"
+
+TESTS_FOLDER = File.join(__dir__(), "..", "lib", "github", "tests")
+
+unless ARGV.count >= 2
+	STDERR.puts("Needs event type as argv2")
+	STDERR.puts("\nMust be one of:")
+	STDERR.puts(
+		Dir.entries(TESTS_FOLDER)
+			.select { |str| str.match(/\.event$/) }
+			.map    { |str| str.gsub( /\.event$/, "") }
+			.map    { |str| " - #{str}" }
+			.join("\n")
+	)
+	exit 1
+end
+
+event = ARGV[1]
+$event = File.read(File.join(TESTS_FOLDER, "#{event}.event"))
+repo = JSON.parse($event)["repository"]["full_name"]
+
+#
+# This assumes:
+#
+#  * Dependencies installed.
+#  * Ran into a nix-shell.
+#
+
+connect()
+
+channel = $conn.create_channel()
+webhook_exchange = channel.topic(WEBHOOK_EXCHANGE, durable: true)
+log("Faking event type #{event} to repo #{repo}")
+webhook_exchange.publish($event, routing_key: "#{event}.##{repo}")
