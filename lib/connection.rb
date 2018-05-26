@@ -1,5 +1,6 @@
 require "bunny"
 
+# FIXME : Use a class instead of global variables.
 def connect()
 	log "connecting..."
 	$conn = Bunny.new(
@@ -10,7 +11,6 @@ def connect()
 		tls:   $config["rabbitmq"]["ssl"],
 		verify_peer: false,
 	)
-	channels = $config["github-to-irc"]["channels"]
 
 	$conn.start()
 	log "connected!"
