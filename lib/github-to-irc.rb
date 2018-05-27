@@ -55,11 +55,8 @@ github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
 	# Or use the defaults.
 	irc_channels ||= channels["default"]
 
-        log "Full reply:"
-        puts reply.inspect
-
 	reply.each do |msg|
-	  irc_channels.each do |c|
+		irc_channels.each do |c|
 			irc_exchange.publish(JSON.generate({
 				target: c,
 				body: msg,
