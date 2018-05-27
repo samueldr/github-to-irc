@@ -3,6 +3,9 @@ require "json"
 require "date"
 require_relative "./webhook.rb"
 
+$stdout.sync = true
+$stderr.sync = true
+
 unless ARGV.count == 1
 	STDERR.puts("Needs config.json as argv1")
 	exit 1
@@ -16,7 +19,7 @@ def log(msg)
 end
 
 WEBHOOK_EXCHANGE = "github-events"
-IRC_EXCHANGE = "exchange-messages"
+IRC_QUEUE = "amq.direct"
 
 log "connecting..."
 conn = Bunny.new(
@@ -25,7 +28,7 @@ conn = Bunny.new(
 	user:  config["rabbitmq"]["username"],
 	pass:  config["rabbitmq"]["password"],
 	tls:   config["rabbitmq"]["ssl"],
-	verify_peer: false,
+	verify_peer: true,
 )
 channels = config["github-to-irc"]["channels"]
 
@@ -33,12 +36,12 @@ conn.start()
 log "connected!"
 
 channel = conn.create_channel()
-github_queue = channel.queue()
+github_queue = channel.queue("", :exclusive => true)
 github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "push.#")
 # Disabled in code as it's spammy AF.
 #github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "issues.#")
 github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "pull_request.#")
-irc_exchange = channel.fanout(IRC_EXCHANGE, durable: true, passive: true)
+irc_exchange = channel.direct("", durable: true, passive: true)
 
 log "Waiting for events..."
 github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
@@ -52,8 +55,11 @@ github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
 	# Or use the defaults.
 	irc_channels ||= channels["default"]
 
+        log "Full reply:"
+        puts reply.inspect
+
 	reply.each do |msg|
-		irc_channels.each do |c|
+	  irc_channels.each do |c|
 			irc_exchange.publish(JSON.generate({
 				target: c,
 				body: msg,
@@ -62,5 +68,6 @@ github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
 		end
 	end
 end
+
 
 log "Bye!"
