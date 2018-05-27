@@ -9,7 +9,7 @@ def connect()
 		user:  $config["rabbitmq"]["username"],
 		pass:  $config["rabbitmq"]["password"],
 		tls:   $config["rabbitmq"]["ssl"],
-		verify_peer: false,
+		verify_peer: true,
 	)
 
 	$conn.start()

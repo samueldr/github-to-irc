@@ -2,12 +2,12 @@ require_relative "libs"
 
 connect()
 channel = $conn.create_channel()
-github_queue = channel.queue()
+github_queue = channel.queue("", exclusive: true)
 github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "push.#")
 # Disabled in code as it's spammy AF.
 #github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "issues.#")
 github_queue.bind(channel.topic(WEBHOOK_EXCHANGE, durable: true), routing_key: "pull_request.#")
-irc_exchange = channel.fanout(IRC_EXCHANGE, durable: true, passive: true)
+irc_exchange = channel.direct("", durable: true, passive: true)
 
 log "Waiting for events..."
 github_queue.subscribe(block: true) do |delivery_info, metadata, payload|

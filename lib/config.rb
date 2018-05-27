@@ -10,4 +10,4 @@ $config = JSON.parse(File.read(ARGV.first))
 $channels = $config["github-to-irc"]["channels"]
 
 WEBHOOK_EXCHANGE = "github-events"
-IRC_EXCHANGE = "exchange-messages"
+IRC_QUEUE = "amq.direct"
