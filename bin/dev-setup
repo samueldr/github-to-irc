@@ -70,7 +70,4 @@ channel = $conn.create_channel()
 log("Creating WEBHOOK_EXCHANGE #{WEBHOOK_EXCHANGE}")
 channel.topic(WEBHOOK_EXCHANGE, durable: true)
 
-log("Creating IRC_EXCHANGE #{IRC_EXCHANGE}")
-channel.fanout(IRC_EXCHANGE, durable: true, passive: false)
-
 log("Done...")
