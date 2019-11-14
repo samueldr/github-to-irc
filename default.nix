@@ -1,9 +1,11 @@
 { pkgs ? import <nixpkgs> {} }:
-with pkgs;
-let env = bundlerEnv {
+
+let
+  inherit (pkgs) bundlerEnv stdenv;
+
+  env = bundlerEnv {
   name = "nixos-webhooks-irc-env";
 
-  inherit ruby;
   gemdir = ./.;
 };
 in
