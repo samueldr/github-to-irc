@@ -2,12 +2,60 @@
 
 require_relative "../lib/libs"
 
+require "shellwords"
+
 #
 # This assumes:
 #
 #  * Dependencies installed.
 #  * Ran into a nix-shell.
 #
+
+module DevSetup
+  VHOST = $config["rabbitmq"]["vhost"];
+
+  def self.run(*cmd, canfail: false)
+    cmd =
+      if cmd.length > 1 then
+        cmd.shelljoin
+      else
+        cmd.first
+      end
+
+    puts " $ #{cmd} "
+    val = `#{cmd}`
+    unless canfail or $?.success? then
+      $stderr.puts "Failed to run #{cmd}"
+      abort
+    end
+    return val
+  end
+
+  def self.mqctl(*args)
+    run("rabbitmqctl", *args)
+  end
+
+  def self.create_user(name)
+    mqctl("add_user", name, name, canfail: true)
+    mqctl("set_permissions", "-p", VHOST, name, ".*", ".*", ".*")
+  end
+
+  def self.create_admin()
+    create_user("admin")
+    mqctl("set_user_tags", "admin", "administrator")
+    mqctl("set_permissions", "-p", "/", "admin", ".*", ".*", ".*")
+  end
+
+  puts "\n :: Configuring rabbitmq..."
+  mqctl("add_vhost", VHOST, canfail: true)
+  create_admin()
+  create_user("management")
+  create_user("monitoring")
+  create_user("webhook")
+  create_user("ofborgservice")
+  create_user("logviewer")
+  puts " :: Done with configuration...\n"
+end
 
 #
 # This will create the exchanges needed for the bot to connect to

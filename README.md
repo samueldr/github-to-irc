@@ -1,8 +1,23 @@
 ## Development
 
+Use `config.example.json` as a starting point to create a `config.json`.
+
+In a first shell
+
+```
+# Start a development rabbitmq instance
+$ nix-shell --run start-services
+```
+
+Then, in a second shell
+
 ```
 $ nix-shell
-$ bin/dev-setup
+
+# Create the minimal "test" environment on the rabbitmq server
+$ bin/dev-setup config.json
+
+# Run the service
 $ bin/github-to-irc config.json
 ```
 
