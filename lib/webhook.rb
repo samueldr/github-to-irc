@@ -57,7 +57,6 @@ module GithubWebhook
 		return [] unless GithubWebhook.constants(false).include?(type)
 		klass = GithubWebhook.const_get(type)
 		instance = klass.new(event)
-		instance.to_messages
 	end
 
 	# Generic Event.
