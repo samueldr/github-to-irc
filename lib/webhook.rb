@@ -88,6 +88,10 @@ module GithubWebhook
 			@event["repository"]["name"]
 		end
 
+		def repo_fullname
+			@event["repository"]["full_name"]
+		end
+
 		def branch
 			@event["ref"].gsub(/^refs\/heads\//, "")
 		end
@@ -134,6 +138,10 @@ module GithubWebhook
 
 		def repository
 			@event["repository"]["name"]
+		end
+
+		def repo_fullname
+			@event["repository"]["full_name"]
 		end
 
 		def number
