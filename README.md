@@ -1,7 +1,23 @@
 ## Development
 
+Use `config.example.json` as a starting point to create a `config.json`.
+
+In a first shell
+
+```
+# Start a development rabbitmq instance
+$ nix-shell --run start-services
+```
+
+Then, in a second shell
+
 ```
 $ nix-shell
+
+# Create the minimal "test" environment on the rabbitmq server
+$ bin/dev-setup config.json
+
+# Run the service
 $ bin/github-to-irc config.json
 ```
 
@@ -13,6 +29,16 @@ $ result/bin/github-to-irc config.json
 ```
 
 ## Updating gems
+
+Updating gems:
+
+```
+$ nix-shell -p bundler
+$ bundle install --path=vendor/bundle # Ensures local gems path is used
+$ bundle update                       # Updates gems
+```
+
+Locking gems for bundix:
 
 ```
 $ bundle install --path=vendor/bundle             # Ensures lockfile is updated
