@@ -15,6 +15,9 @@ github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
 	type, repository = delivery_info[:routing_key].split(".")
 	data = JSON.parse(payload)
 
+	# Skip repositories that are private on GitHub.
+	next if data["repository"]["private"]
+
 	handler = GithubWebhook.handle(data, type: type)
 	reply = handler.to_messages
 
