@@ -18,6 +18,14 @@ github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
 	handler = GithubWebhook.handle(data, type: type)
 	reply = handler.to_messages
 
+	if handler.filtered?
+		log "Filtering out #{reply.length} messages..."
+		reply.map { |m| " [filtered] #{m}" }.each do |m|
+			log m
+		end
+		next
+	end
+
 	# Find the repository's channels...
 	irc_channels = $channels["per-repository"][repository.downcase] if $channels["per-repository"]
 	# Or use the defaults.

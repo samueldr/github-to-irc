@@ -8,6 +8,7 @@ end
 # https://github.com/NixOS/ofborg/blob/03312b8176bfd197aeb693721b516c6a25a4611e/ircbot/src/config.rs#L17
 $config = JSON.parse(File.read(ARGV.first))
 $channels = $config["github-to-irc"]["channels"]
+$filters = $config["github-to-irc"]["filters"] || {}
 
 WEBHOOK_EXCHANGE = "github-events"
 IRC_QUEUE = "amq.direct"
