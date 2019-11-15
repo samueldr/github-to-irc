@@ -14,7 +14,9 @@ github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
 	# Assuming the routing key to stay `event_type.owner/repo`.
 	type, repository = delivery_info[:routing_key].split(".")
 	data = JSON.parse(payload)
-	reply = GithubWebhook.handle(data, type: type)
+
+	handler = GithubWebhook.handle(data, type: type)
+	reply = handler.to_messages
 
 	# Find the repository's channels...
 	irc_channels = $channels["per-repository"][repository.downcase] if $channels["per-repository"]
