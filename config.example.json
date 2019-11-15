@@ -9,6 +9,16 @@
 					"#nixos-borg"
 				]
 			}
+		},
+		"filters" : {
+			"default": [
+				{"type": "ignore-branch", "exact": "gh-pages"}
+			],
+			"per-repository": {
+				"nixos/nixpkgs": [
+					{"type": "ignore-branch", "regex": "^nix(os|pkgs)-"}
+				]
+			}
 		}
 	},
 	"rabbitmq": {
