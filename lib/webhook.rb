@@ -75,6 +75,42 @@ module GithubWebhook
 		def sender()
 			to_author(@event["sender"])
 		end
+
+		# True when the event is filtered *out*.
+		def filtered?()
+			filters = []
+				.concat($filters["per-repository"][repo_fullname.downcase] || [])
+				.concat($filters["default"] || [])
+
+			filters.any? do |filter|
+				compare_filter(filter)
+			end
+		end
+
+		def compare_filter(filter)
+			type = filter["type"]
+
+			action, subject = type.split("-", 2)
+			subject = subject.to_sym
+
+			unless respond_to?(subject)
+				# Not filtering in that case, return from function.
+				return false
+			end
+
+			unless action == "ignore"
+				log "Don't know how to handle filter type '#{type}'."
+			end
+
+			value = send(subject)
+
+			if filter["exact"] then
+				value == filter["exact"]
+			elsif filter["regex"] then
+				r = Regexp.new(filter["regex"])
+				!!value.match(r)
+			end
+		end
 	end
 
 	# Push event.
