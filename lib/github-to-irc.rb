@@ -35,6 +35,7 @@ github_queue.subscribe(block: true) do |delivery_info, metadata, payload|
 	irc_channels ||= $channels["default"]
 
 	reply.each do |msg|
+		msg = msg.gsub(/[\n\r]/, "")
 		log msg.inspect
 		irc_channels.each do |c|
 			irc_exchange.publish(JSON.generate({
