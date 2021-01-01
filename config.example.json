@@ -12,7 +12,8 @@
 		},
 		"filters" : {
 			"default": [
-				{"type": "ignore-branch", "exact": "gh-pages"}
+				{"type": "ignore-branch", "exact": "gh-pages"},
+				{"type": "ignore-author", "exact": "@github-actions[bot]"}
 			],
 			"per-repository": {
 				"nixos/nixpkgs": [
