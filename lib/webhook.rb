@@ -190,7 +190,7 @@ module GithubWebhook
 		end
 
 		def url
-			git_io(_self["html_url"])
+			_self["html_url"]
 		end
 
 		def title
