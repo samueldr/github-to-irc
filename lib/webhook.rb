@@ -150,6 +150,11 @@ module GithubWebhook
 				return []
 			end
 
+			# Elide branch deletion
+			if count == 0
+				return []
+			end
+
 			# Starts with a description of the event.
 			# Handles 1-commit long push events differently,
 			# Then keeps at most the three first commits.
