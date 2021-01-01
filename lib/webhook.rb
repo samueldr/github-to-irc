@@ -144,6 +144,12 @@ module GithubWebhook
 		end
 
 		def to_messages()
+			# Elide push events from a merge
+			if @event["after"] == PullRequest.last_merged_sha
+				log "#{self.class.name} event elided since it matched the last merge event."
+				return []
+			end
+
 			# Starts with a description of the event.
 			# Handles 1-commit long push events differently,
 			# Then keeps at most the three first commits.
@@ -218,6 +224,20 @@ module GithubWebhook
 
 	# Pull Request event.
 	class PullRequest < IssueLike
+		def self.last_merged_sha
+			@@last_merged_sha ||= nil
+		end
+
+		def initialize(event)
+			super(event)
+
+			# Save the last merged sha, which will be used to elide the
+			# following push event.
+			if status == "merged"
+				@@last_merged_sha = @event["pull_request"]["merge_commit_sha"]
+			end
+		end
+
 		def _self
 			pull_request
 		end
@@ -226,19 +246,20 @@ module GithubWebhook
 			@event["pull_request"]
 		end
 
-		def to_messages
-			status =
-				case action
-				when "closed"
-					if pull_request["merged"] == true
-						"merged"
-					else
-						"closed"
-					end
+		def status
+			case action
+			when "closed"
+				if pull_request["merged"] == true
+					"merged"
 				else
-					action
+					"closed"
 				end
+			else
+				action
+			end
+		end
 
+		def to_messages
 			case action
 			when "opened", "closed", "reopened"
 				["[#{repository}] #{sender} #{status} pull request ##{number} → #{title} → #{url}"]
